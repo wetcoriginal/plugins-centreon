@@ -39,27 +39,16 @@ function CheckOneJob {
                 }
                 else
                 {  
+                    #$global:OutMessageTemp+="QUoiquece:"+$DiffTime.TotalDays
                     $EstRun=get-date
-                    if($JobCheck.IsBackup -eq $true)
-                    {
-                        $LastRunSession=Get-VBRSession -Job $JobCheck -Last
-                        $LastRun=$LastRunSession.EndTime
-                        $DiffTime=new-timespan $LastRun $EstRun
-
-                    }
-                    else
-                    {
-                        $LastRunSession=Get-VBRSession -Job $JobCheck -Last
-                        $LastRun=$JobCheck.ScheduleOptions.LatestRunLocal
-                        $DiffTime=new-timespan $LastRun $EstRun
-                    }
-                    if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalDays -gt 1))
+                    $LastRunSession=Get-VBRSession -Job $JobCheck -Last
+                    $LastRun=$LastRunSession.CreationTime
+                    if(($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalHours -gt 24))
                     {
                         $global:ExitCode=2
                         $global:OutMessageTemp+="CRITICAL - Le job "+$JobCheck.Name+" n a pas ete execute lors de la derniere journee"
                         $global:CriticalCount++
                     }
-                    
                     else
                     {
                         if(($JobCheck.IsReplica -eq $true) -and ($DiffTime.TotalHours -gt 2) )
