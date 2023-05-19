@@ -8,20 +8,20 @@ $Jobs = Get-VBRTapeJob -Name 'Backup2Tape'
 $Job = $null
 $lastStatus = $Jobs | Foreach-Object LastResult
 $lastState = $Jobs | Foreach-Object LastState
-$LastRunSession=Get-VBRsession -Job $Jobs -Last | select {$_.creationtime}
-$LastRun=Get-VBRSession -Job $Jobs -Last | Select-Object -ExpandProperty CreationTime
+$LastRunSession=Get-VBRsession -Job $Jobs -Last | select {$_.endtime}
+$LastRun=Get-VBRSession -Job $Jobs -Last | Select-Object -ExpandProperty EndTime
 $DiffTime=$EstRun - $LastRun
 
 
 function CheckOneJob {
-    if(($lastState -eq "Working") -and ($DiffTime.Hours -gt 24))
+    if(($lastState -eq "Working") -and ($DiffTime.TotalHours -gt 24))
     {
         $global:CriticalCount++
         $global:OutMessageTemp += "CRITICAL - The job '" + $JobCheck.Name + "' has been running for more than 24 hours`r`n"
         $global:ExitCode=2
         if($global:ExitCode -ne 2) {$global:ExitCode = 1}
     }
-    elseif (($lastState -eq "Working") -and ($DiffTime.Hours -lt 24))
+    elseif (($lastState -eq "Working") -and ($DiffTime.TotalHours -lt 24))
     {
          $global:OutMessageTemp += "OK - The job '" + $JobCheck.Name + "' is in progress since " + $DiffTime.Hours + " hours`r`n"
          $global:OkCount++
