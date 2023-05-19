@@ -39,8 +39,6 @@ function CheckOneJob {
                 }
                 else
                 {  
-
-                    #$global:OutMessageTemp+="QUoiquece:"+$DiffTime.TotalDays
                     $EstRun=get-date
                     if($JobCheck.IsBackup -eq $true)
                     {
@@ -51,10 +49,10 @@ function CheckOneJob {
                     }
                     else
                     {
+                        $LastRunSession=Get-VBRSession -Job $JobCheck -Last
                         $LastRun=$JobCheck.ScheduleOptions.LatestRunLocal
                         $DiffTime=new-timespan $LastRun $EstRun
                     }
-                    
                     if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalDays -gt 1))
                     {
                         $global:ExitCode=2
