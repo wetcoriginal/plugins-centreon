@@ -45,8 +45,8 @@ function CheckOneJob {
                 }
                 else
                 {  
-                $LastRunSession=Get-VBRsession -Job $JobCheck -Last | select {$_.creationtime}
-                $LastRun=$LastRunSession.'$_.creationtime'
+                $LastRunSession=Get-VBRsession -Job $JobCheck -Last | select {$_.endtime}
+                $LastRun=$LastRunSession.'$_.endtime'
                 $EstRun=get-date
                 $DiffTime=$EstRun - $LastRun
                     if ($DiffTime.Days -gt 1)
@@ -57,8 +57,8 @@ function CheckOneJob {
                     }
                         else
                         {
-                            $LastRunSession=Get-VBRsession -Job $JobCheck -Last | select {$_.creationtime}
-                            $LastRun=$LastRunSession.'$_.creationtime'
+                            $LastRunSession=Get-VBRsession -Job $JobCheck -Last | select {$_.endtime}
+                            $LastRun=$LastRunSession.'$_.endtime'
                             $global:OutMessageTemp+="OK - "
                             $global:OutMessageTemp+=$JobCheck.Name+" "
                             $global:OutMessageTemp+="execute le "+$LastRun
