@@ -8,7 +8,7 @@ $Jobs = Get-VBRTapeJob -Name 'Backup2Tape'
 $Job = $null
 $lastStatus = $Jobs | Foreach-Object LastResult
 $lastState = $Jobs | Foreach-Object LastState
-$LastRunSession=Get-VBRsession -Job $Jobs -Last | select {$_.endtime}
+$LastRunSession=Get-VBRsession -Job $Jobs -Last | select {$_.creationtime}
 $LastRun=Get-VBRSession -Job $Jobs -Last | Select-Object -ExpandProperty CreationTime
 $DiffTime=$EstRun - $LastRun
 
