@@ -3,9 +3,9 @@
 function CheckOneJob {
 $JobCheck=Get-VBOJob -Name $args[0]
 $lastStatus=$JobCheck | Get-VBOJobSession -Last | Foreach-Object {$_.Status}
-$CreationJobTime=$JobCheck | Get-VBOJobSession -Last | Foreach-Object {$_.CreationTime}
+$CreationJobTime=$JobCheck | Get-VBOJobSession -Last | Foreach-Object {$_.EndTime}
 $DisabledJobs=$JobCheck | Foreach-Object {$_.IsEnabled}
-$Avant=$JobCheck | Get-VBOJobSession -Last | Foreach-Object {$_.CreationTime}
+$Avant=$JobCheck | Get-VBOJobSession -Last | Foreach-Object {$_.EndTime}
 $Apres=Get-Date
 $TempsEcoulee=$Apres-$Avant
 $LimitTemps="23:59:00.0000000" #Valeur -> Si le job est en Running depuis + de 24h -> Warning 
@@ -14,7 +14,7 @@ if($global:OutMessageTemp -ne ""){$global:OutMessageTemp+="`r`n"}
 if($JobCheck.isEnabled -eq $false){
 if($DisabledJobs -ne $true){
 $global:OutMessageTemp+="WARNING - Le job '"+$JobCheck.Name+"' est desactive "
-$global:WarningDisabledCount++ #exo
+$global:WarningDisabledCount++
 if($global:ExitCode -lt 2){$global:ExitCode=1}
 }
 }
@@ -49,7 +49,7 @@ $global:ExitCode=2
 else
 {
  
-if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.Days -gt 1))
+if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalDays -gt 1))
 {
 $global:ExitCode=2
 $global:OutMessageTemp+="CRITICAL - Le job "+$JobCheck.Name+" n a pas ete execute lors de la derniere journee"
@@ -58,7 +58,7 @@ $global:CriticalCount++
  
 else
 {
-if(($JobCheck.IsReplica -eq $true) -and ($DiffTime.Hours -gt 2) )
+if(($JobCheck.IsReplica -eq $true) -and ($DiffTime.TotalHours -gt 2) )
 {
 $global:ExitCode=2
 $global:OutMessageTemp+="CRITICAL - La replication "+$JobCheck.Name+" n a pas ete execute lors de la derniere journee"
