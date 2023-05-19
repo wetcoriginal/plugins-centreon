@@ -1,9 +1,9 @@
 # Edited by @wetcoriginal for backup 2 tape jobs #
-
+$WarningPreference = 'SilentlyContinue'
 
 Add-PSSnapin -Name VeeamPSSnapIn -ErrorAction SilentlyContinue
 function CheckOneJob {
-    $JobCheck=get-vbrtapejob -Name 'Backup to Tape Job'
+    $JobCheck=get-vbrtapejob -Name 'Backup to Tape Job DC'
         if($global:OutMessageTemp -ne ""){$global:OutMessageTemp+="`r`n"}
 
         if($JobCheck.Enabled -eq $false){ # Disabled job -> WARNING
@@ -19,11 +19,11 @@ function CheckOneJob {
 			$lastState=$JobCheck | Foreach-Object LastState
             if($lastState -eq "Working"){
                 $global:OutMessageTemp+="OK - Le job "+$JobCheck.Name+" est en cours de sauvegarde"
-                $global:OkCount++ 
+                $global:OkCount++  #exo
 			}
            elseif($lastState -eq "WaitingTape"){
                 $global:OutMessageTemp+="WARNING - Le job "+$JobCheck.Name+" est en attente d'une bande de sauvegarde"
-                $global:WarningCount++ 
+                $global:WarningCount++  #exo
             }
             else {
                 if($lastStatus -ne "Success"){ # Failed or None->never run before (probaly a newly created job)
@@ -45,8 +45,8 @@ function CheckOneJob {
                 }
                 else
                 {  
-                $LastRunSession=Get-VBRsession -Job $JobCheck -Last | select {$_.endtime}
-                $LastRun=$LastRunSession.'$_.endtime'
+                $LastRunSession=Get-VBRsession -Job $JobCheck -Last | select {$_.creationtime}
+                $LastRun=$LastRunSession.'$_.creationtime'
                 $EstRun=get-date
                 $DiffTime=$EstRun - $LastRun
                     if ($DiffTime.Days -gt 1)
@@ -57,8 +57,8 @@ function CheckOneJob {
                     }
                         else
                         {
-                            $LastRunSession=Get-VBRsession -Job $JobCheck -Last | select {$_.endtime}
-                            $LastRun=$LastRunSession.'$_.endtime'
+                            $LastRunSession=Get-VBRsession -Job $JobCheck -Last | select {$_.creationtime}
+                            $LastRun=$LastRunSession.'$_.creationtime'
                             $global:OutMessageTemp+="OK - "
                             $global:OutMessageTemp+=$JobCheck.Name+" "
                             $global:OutMessageTemp+="execute le "+$LastRun
