@@ -45,7 +45,7 @@ function CheckOneJob {
                     if($JobCheck.IsBackup -eq $true)
                     {
                         $LastRunSession=Get-VBRSession -Job $JobCheck -Last
-                        $LastRun=$LastRunSession.CreationTime
+                        $LastRun=$LastRunSession.EndTime
                         $DiffTime=new-timespan $LastRun $EstRun
 
                     }
