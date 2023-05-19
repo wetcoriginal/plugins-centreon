@@ -10,7 +10,7 @@ function CheckOneJob {
                     if($JobCheck.IsBackup -eq $true)
                     {
                         $LastRunSession=Get-VBRSession -Job $JobCheck -Last
-                        $LastRun=$LastRunSession.EndTime
+                        $LastRun=$LastRunSession.CreationTime
                         $DiffTime=new-timespan $LastRun $EstRun
 
                     }
@@ -21,14 +21,14 @@ function CheckOneJob {
                     }
                     
                     
-                    if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.Hours -gt 24) -and ($JobCheck.IsRunning  -eq $true))
+                    if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalHours -gt 24) -and ($JobCheck.IsRunning  -eq $true))
                     {
                         $global:ExitCode=2
                         $global:OutMessageTemp+="CRITICAL - The backup job " + $JobCheck.Name + " has been running for more than 24 hours`r`n"
                         $global:CriticalCount++
                     }
 
-                    if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.Hours -lt 24) -and ($JobCheck.IsRunning  -eq $true))
+                    if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalHours -lt 24) -and ($JobCheck.IsRunning  -eq $true))
                     {
                         $global:OutMessageTemp+="OK - The backup job " + $JobCheck.Name + " is in progress since " + $DiffTime.Hours + " hours and " + $DiffTime.Minutes + " minutes `r`n"
                         $global:OkCount++
@@ -36,13 +36,13 @@ function CheckOneJob {
                     
                     else
                     {
-                        if(($JobCheck.IsReplica -eq $true) -and ($DiffTime.Hours -gt 24) -and ($JobCheck.IsRunning  -eq $true))
+                        if(($JobCheck.IsReplica -eq $true) -and ($DiffTime.TotalHours -gt 24) -and ($JobCheck.IsRunning  -eq $true))
                         {
                             $global:ExitCode=2
                             $global:OutMessageTemp+="CRITICAL - The replica job " + $JobCheck.Name + "' has been running for more than 24 hours`r`n"
                             $global:CriticalCount++
                         }
-                        if (($JobCheck.IsReplica -eq $true) -and ($DiffTime.Hours -lt 24) -and ($JobCheck.IsRunning  -eq $true))
+                        if (($JobCheck.IsReplica -eq $true) -and ($DiffTime.TotalHours -lt 24) -and ($JobCheck.IsRunning  -eq $true))
                         {
                             $global:OutMessageTemp+="OK - The replica job "+$JobCheck.Name+" is in progress since " + $DiffTime.Hours + " hours and " + $DiffTime.Minutes + " minutes `r`n"
                             $global:OkCount++
