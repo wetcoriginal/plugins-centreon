@@ -11,7 +11,7 @@ function CheckOneJob {
 
     $EstRun = Get-Date
     $LastRunSession = Get-VBRSession -Job $JobCheck -Last
-    $LastRun = $LastRunSession.EndTime
+    $LastRun = $LastRunSession.CreationTime
 
     if ($LastRun -ne $null) {
     $DiffTime = New-TimeSpan -Start $LastRun -End $EstRun
@@ -24,6 +24,7 @@ function CheckOneJob {
     if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalDays -gt 1) -and ($JobCheck.IsRunning -eq $true)) {
         $global:ExitCode = 2
         $global:OutMessageTemp += "CRITICAL - The backup job " + $JobCheck.Name + " has been running for more than 24 hours`r`n"
+        $global:OutMessageTemp += $DiffTime.TotalHours
         $global:CriticalCount++
     }
     elseif (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalDays -lt 1) -and ($JobCheck.IsRunning -eq $true)) {
