@@ -11,7 +11,7 @@ function CheckOneJob {
                     if($lastStatus -eq "Running")
                     {
                         $LastRunSession=$JobCheck | Get-VBOJobSession -Last | Foreach-Object {$_.Status}
-                        $LastRun=$JobCheck | Get-VBOJobSession -Last | Foreach-Object {$_.EndTime}
+                        $LastRun=$JobCheck | Get-VBOJobSession -Last | Foreach-Object {$_.CreationTime}
                         $DiffTime=$EstRun-$LastRun
 
                     }
