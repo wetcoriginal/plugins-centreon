@@ -137,13 +137,13 @@ $TotalCount=$global:WarningDisabledCount + $global:WarningCount + $global:Critic
 $global:OutMessage="TOTAL=>" + $TotalCount + " / OK=>" + $global:OkCount + " / CRITICAL=>" + $global:CriticalCount + " / DISABLE=>" + $global:WarningDisabledCount + " / WARNING=>" + $global:WarningCount
 $global:OutMessage+="`r`n" + $global:OutMessageTemp
 
-if($global:WarningCount =! 0){
+if($global:WarningCount -ne 0){
 $global:Exitcode = 1
 }
-elseif($global:WarningDisabledCount =! 0){
+elseif($global:WarningDisabledCount -ne 0){
 $global:Exitcode = 1
 }
-elseif($global:CriticalCount =! 0){
+elseif($global:CriticalCount -ne 0){
 $global:Exitcode = 2
 }
 else{
