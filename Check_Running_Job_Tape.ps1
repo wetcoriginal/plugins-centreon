@@ -9,7 +9,7 @@ $Job = $null
 $lastStatus = $Jobs | Foreach-Object LastResult
 $lastState = $Jobs | Foreach-Object LastState
 $LastRunSession=Get-VBRsession -Job $Jobs -Last | select {$_.endtime}
-$LastRun=Get-VBRSession -Job $Jobs -Last | Select-Object -ExpandProperty EndTime
+$LastRun=Get-VBRSession -Job $Jobs -Last | Select-Object -ExpandProperty CreationTime
 $DiffTime=$EstRun - $LastRun
 
 
