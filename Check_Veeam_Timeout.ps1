@@ -11,7 +11,7 @@ function CheckOneJob {
 
     $EstRun = Get-Date
     $LastRunSession = Get-VBRSession -Job $JobCheck -Last
-    $LastRun = $LastRunSession.EndTime
+    $LastRun = $LastRunSession.CreationTime
 
     if ($LastRun -ne $null) {
     $DiffTime = New-TimeSpan -Start $LastRun -End $EstRun
