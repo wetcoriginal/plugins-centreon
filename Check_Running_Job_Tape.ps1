@@ -8,10 +8,9 @@ $Jobs = Get-VBRTapeJob -Name 'Backup2Tape'
 $Job = $null
 $lastStatus = $Jobs | Foreach-Object LastResult
 $lastState = $Jobs | Foreach-Object LastState
-$LastRunSession=Get-VBRsession -Job $Jobs -Last | select {$_.endtime}
-$LastRun=Get-VBRSession -Job $Jobs -Last | Select-Object -ExpandProperty CreationTime
+$LastRunSession=Get-VBRTapeBackupSession -Job $Jobs | Sort-Object -Property EndTime -Descending | Select-Object -First 1 -ExpandProperty EndTime
+$LastRun=Get-VBRTapeBackupSession -Job $Jobs | Sort-Object -Property CreationTime -Descending | Select-Object -First 1 -ExpandProperty CreationTime
 $DiffTime=$EstRun - $LastRun
-
 
 function CheckOneJob {
     if(($lastState -eq "Working") -and ($DiffTime.TotalHours -gt 24))
@@ -23,7 +22,11 @@ function CheckOneJob {
     }
     elseif (($lastState -eq "Working") -and ($DiffTime.TotalHours -lt 24))
     {
-         $global:OutMessageTemp += "OK - The job '" + $JobCheck.Name + "' is in progress since " + $DiffTime.Hours + " hours`r`n"
+         $global:OutMessageTemp += "OK - The job '" + $Jobs.Name + "' is in progress since " + $DiffTime.Hours + " hours`r`n"
+         $global:OkCount++
+    }
+    else {
+         $global:OutMessageTemp += "OK - The job '" + $Jobs.Name + "' is not currently running. `r`n"
          $global:OkCount++
     }
 }
