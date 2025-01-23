@@ -5,51 +5,50 @@ Add-PSSnapin -Name VeeamPSSnapIn -ErrorAction SilentlyContinue
 function CheckOneJob {
     $JobCheck = Get-VBRJob -Name $args[0]
 
-    if($global:OutMessageTemp -ne "") {
+    if ($global:OutMessageTemp -ne "") {
         $global:OutMessageTemp += "`r`n"
     }
 
     $EstRun = Get-Date
     $LastRunSession = Get-VBRSession -Job $JobCheck -Last
+
+    # Vérification si le job n'a jamais été exécuté
+    if ($null -eq $LastRunSession) {
+        $global:OutMessageTemp += "WARNING - The job " + $JobCheck.Name + " has never been executed.`r`n"
+        $global:WarningCount++
+        return
+    }
+
     $LastRun = $LastRunSession.CreationTime
 
-    if ($LastRun -ne $null) {
-    $DiffTime = New-TimeSpan -Start $LastRun -End $EstRun
-    } 
-    else {
-    $DiffTime = New-TimeSpan
+    # Vérification et conversion de $LastRun
+    if (-not ($LastRun -is [datetime])) {
+        try {
+            $LastRun = [datetime]::Parse($LastRun)
+        } catch {
+            Write-Host "Erreur : Impossible de convertir \$LastRun en DateTime pour le job $($JobCheck.Name)."
+            return
+        }
     }
 
+    # Calcul de la différence
+    try {
+        $DiffTime2 = New-TimeSpan -Start $LastRun -End $EstRun
+    } catch {
+        Write-Host "Erreur lors du calcul de la différence pour le job $($JobCheck.Name) : $_"
+        return
+    }
 
-    if (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalDays -gt 1) -and ($JobCheck.IsRunning -eq $true)) {
+    # Vérifications des différents scénarios
+    if (($JobCheck.IsBackup -eq $true) -and ($DiffTime2.TotalDays -gt 1) -and ($JobCheck.IsRunning -eq $true)) {
         $global:ExitCode = 2
-        $global:OutMessageTemp += "CRITICAL - The backup job " + $JobCheck.Name + " has been running for more than 24 hours`r`n"
+        $global:OutMessageTemp += "CRITICAL - The backup job " + $JobCheck.Name + " has been running for more than 24 hours.`r`n"
         $global:CriticalCount++
-    }
-    elseif (($JobCheck.IsBackup -eq $true) -and ($DiffTime.TotalDays -lt 1) -and ($JobCheck.IsRunning -eq $true)) {
-        $global:OutMessageTemp += "OK - The backup job " + $JobCheck.Name + " is in progress since " + $DiffTime.Hours + " hours and " + $DiffTime.Minutes + " minutes `r`n"
+    } elseif (($JobCheck.IsBackup -eq $true) -and ($DiffTime2.TotalDays -lt 1) -and ($JobCheck.IsRunning -eq $true)) {
+        $global:OutMessageTemp += "OK - The backup job " + $JobCheck.Name + " is in progress since " + $DiffTime2.Hours + " hours and " + $DiffTime2.Minutes + " minutes.`r`n"
         $global:OkCount++
-    }
-    elseif (($JobCheck.IsBackupCopy -eq $true) -and ($DiffTime.TotalHours -gt 24) -and ($JobCheck.IsRunning -eq $true)) {
-        $global:ExitCode = 2
-        $global:OutMessageTemp += "CRITICAL - The backup job " + $JobCheck.Name + " has been running for more than 24 hours`r`n"
-        $global:CriticalCount++
-    }
-    elseif (($JobCheck.IsBackupCopy -eq $true) -and ($DiffTime.TotalHours -lt 24) -and ($JobCheck.IsRunning -eq $true)) {
-        $global:OutMessageTemp += "OK - The backup job " + $JobCheck.Name + " is in progress since " + $DiffTime.Hours + " hours and " + $DiffTime.Minutes + " minutes `r`n"
-        $global:OkCount++
-    }
-    elseif (($JobCheck.IsReplica -eq $true) -and ($DiffTime.TotalHours -gt 24) -and ($JobCheck.IsRunning -eq $true)) {
-        $global:ExitCode = 2
-        $global:OutMessageTemp += "CRITICAL - The replica job " + $JobCheck.Name + " has been running for more than 24 hours`r`n"
-        $global:CriticalCount++
-    }
-    elseif (($JobCheck.IsReplica -eq $true) -and ($DiffTime.TotalHours -lt 24) -and ($JobCheck.IsRunning -eq $true)) {
-        $global:OutMessageTemp += "OK - The replica job " + $JobCheck.Name + " is in progress since " + $DiffTime.Hours + " hours and " + $DiffTime.Minutes + " minutes `r`n"
-        $global:OkCount++
-    }
-    else {
-        $global:OutMessageTemp += "OK - The " + $JobCheck.Name + " job is not running"
+    } else {
+        $global:OutMessageTemp += "OK - The " + $JobCheck.Name + " job is not running."
         $global:OkCount++
     }
 }
