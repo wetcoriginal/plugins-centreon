@@ -16,7 +16,7 @@ function CheckOneJob {
     if(($lastState -eq "Working") -and ($DiffTime.TotalHours -gt 24))
     {
         $global:CriticalCount++
-        $global:OutMessageTemp += "CRITICAL - The job '" + $JobCheck.Name + "' has been running for more than 24 hours`r`n"
+        $global:OutMessageTemp += "CRITICAL - The job '" + $Jobs.Name + "' has been running for more than 24 hours`r`n"
         $global:ExitCode=2
         if($global:ExitCode -ne 2) {$global:ExitCode = 1}
     }
