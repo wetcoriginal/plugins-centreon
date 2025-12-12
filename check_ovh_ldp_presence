@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+import ovh
+import json
+from datetime import datetime, timedelta
+from dateutil import parser
+import sys
+import os
+# --- CONFIGURATION OVH ---
+# - CHANGE ENDPOINT IF NEEDED -
+ENDPOINT = "ovh-eu"
+APP_KEY = "APP_KEY_API"
+APP_SECRET = "APP_SECRET_API"
+CONSUMER_KEY = "CONSUMER_KEY_API"
+# Format : (serviceName, streamID, clientName)
+FLUX_LIST = [
+    ("ldp-XX-XXXXX", "XXXXXXXX-XXXXX-XXXX-XXXX-XXXXXXXXXXX", "ALIAS_1"),
+    ("ldp-XX-XXXXX", "XXXXXXXX-XXXXX-XXXX-XXXX-XXXXXXXXXXX", "ALIAS_2"),
+]
+# --- INITIALISATION CLIENT OVH ---
+client = ovh.Client(
+    endpoint=ENDPOINT,
+    application_key=APP_KEY,
+    application_secret=APP_SECRET,
+    consumer_key=CONSUMER_KEY
+)
+# --- DÉFINIR LA DATE DU JOUR (début de journée en UTC) ---
+date_aujourdhui = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+# --- VÉRIFICATION DE TOUS LES FLUX ---
+flux_ko = []  # liste des flux sans archive du jour
+flux_ok = []  # liste des flux OK
+for service_name, stream_id, client_name in FLUX_LIST:
+    try:
+        archive_ids = client.get(f"/dbaas/logs/{service_name}/output/graylog/stream/{stream_id}/archive")
+    except Exception as e:
+        print(f"UNKNOWN - Erreur lors de la récupération des archives pour {client_name}: {e}")
+        sys.exit(3)
+    if not archive_ids:
+        flux_ko.append(f"{client_name} (aucune archive)")
+        continue
+    # Vérifier si au moins une archive du jour existe
+    archive_du_jour_presente = False
+    for archive_id in archive_ids:
+        try:
+            archive_detail = client.get(f"/dbaas/logs/{service_name}/output/graylog/stream/{stream_id}/archive/{archive_id}")
+            created_at_str = archive_detail.get("createdAt")
+            if not created_at_str:
+                continue
+            created_at = parser.parse(created_at_str).replace(tzinfo=None)
+            # Vérifier si l'archive a été créée aujourd'hui
+            if created_at >= date_aujourdhui:
+                archive_du_jour_presente = True
+                break
+        except Exception as e:
+            print(f"UNKNOWN - Erreur pour archive {archive_id} du flux {client_name}: {e}")
+            sys.exit(3)
+    if archive_du_jour_presente:
+        flux_ok.append(f"{client_name}")
+    else:
+        flux_ko.append(f"{client_name}")
+# --- SORTIE CENTREON ---
+if flux_ko:
+    print(f"CRITICAL - Flux sans archive du jour : {', '.join(flux_ko)}")
+    sys.exit(2)
+else:
+    print(f"OK - Tous les flux ont une archive du jour. Flux OK : {', '.join(flux_ok)}")
+    sys.exit(0)
