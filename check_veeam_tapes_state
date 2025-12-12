@@ -1,0 +1,43 @@
+param(
+    [string] $MediaPoolName = "NOM_DU_MEDIA_POOL"
+)
+Import-Module Veeam.Backup.PowerShell -ErrorAction Stop -WarningAction SilentlyContinue
+# Récupérer le media pool
+$mediaPool = Get-VBRTapeMediaPool | Where-Object { $_.Name -eq $MediaPoolName }
+if (-not $mediaPool){
+    Write-Output "CRITICAL - MediaPool '$MediaPoolName' introuvable"
+    exit 2
+}
+# Sélectionner uniquement les bandes Slot ou Drive
+$tapes = Get-VBRTapeMedium |
+    Where-Object {
+        $_.MediaPoolId.Guid -eq $mediaPool.Id.Guid -and
+        $_.Location -in "Slot","Drive"
+    }
+if ($tapes.Count -eq 0){
+    Write-Output "CRITICAL - 0 bandes detectees"
+    exit 2
+}
+$total = $tapes.Count
+$names = $tapes.Name
+# Vérifications
+$unlockCount = ($tapes | Where-Object { $_.IsLocked -eq $false }).Count
+$markFreeCount = ($tapes | Where-Object { $_.IsFree -eq $true }).Count
+# ----- RÈGLES -----
+# 1) Toutes les bandes doivent être UNPROTECT
+$allUnprotected = ($unlockCount -eq $total)
+# 2) Au moins 2 bandes doivent être MarkAsFree
+$enoughFree = ($markFreeCount -ge 2)
+# ----- ÉVALUATION -----
+if ($allUnprotected -and $enoughFree) {
+    $status = "OK"
+    $exitCode = 0
+}
+else {
+    $status = "CRITICAL"
+    $exitCode = 2
+}
+# Affichage Centreon
+Write-Output ("{0} - {1} bandes. Unprotect: {2}/{1} - MarkAsFree: {3}/{1} - Tapes: {4}" `
+             -f $status, $total, $unlockCount, $markFreeCount, ($names -join ", "))
+exit $exitCode
